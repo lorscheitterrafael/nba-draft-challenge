@@ -1,882 +1,322 @@
 // =============================================================
-//  NBA DRAFT CHALLENGE — LÓGICA COMPLETA
-//
-//  Fluxo geral:
-//  DRAFT: startDraft → drawTeam → selectPlayer → (5x) → draftComplete
-//  PLAYOFFS: initPlayoffs → showBracket → startSeries → simOneGame
-//            → (série completa) → próxima rodada ou eliminado/campeão
+//  NBA 7A0 — SCRIPT PRINCIPAL
+//  Ordem de leitura:
+//  1. gameState  → estado do jogo
+//  2. Referências ao DOM
+//  3. Funções utilitárias
+//  4. Funções de navegação (telas)
+//  5. Funções do jogo
+//  6. Event listeners (inicialização)
 // =============================================================
 
 
 // -------------------------------------------------------------
-//  1. ESTADO GLOBAL
+//  1. ESTADO DO JOGO
+//  Um único objeto que guarda tudo que está acontecendo.
+//  Quando uma partida recomeça, basta resetar este objeto.
 // -------------------------------------------------------------
-let state = {
-  // --- Draft ---
-  lineup:      { PG: null, SG: null, SF: null, PF: null, C: null },
-  draftRound:  1,
-  usedTeamIds: [],
-  currentTeam: null,
-
-  // --- Playoffs ---
-  playoffs: {
-    round:     0,        // 1=Quartas 2=Semis 3=ConfFinals 4=Final NBA
-    opponents: [],       // [opp_r1, opp_r2, opp_r3, opp_r4]
-    confB:     {},       // dados da conferência adversária (para o bracket)
-    userAvg:   0,
-    series:    { u: 0, ai: 0 },
-    gameNum:   0
-  }
+let gameState = {
+  team:           null,   // objeto do time sorteado
+  playerCard:     null,   // jogador escolhido pelo usuário
+  aiCard:         null,   // jogador escolhido pela IA
+  currentStat:    null,   // chave da categoria sorteada na rodada
+  scorePlayer:    0,      // pontuação do usuário
+  scoreAI:        0,      // pontuação da IA
+  roundsPlayed:   0,      // quantas rodadas já aconteceram
+  maxRounds:      5       // total de rodadas por partida
 };
 
 
 // -------------------------------------------------------------
 //  2. REFERÊNCIAS AO DOM
+//  Buscamos cada elemento uma única vez e guardamos em variáveis.
+//  Muito mais eficiente do que chamar getElementById toda hora.
 // -------------------------------------------------------------
-const $ = id => document.getElementById(id);
-
 const screens = {
-  start:      $('screen-start'),
-  draft:      $('screen-draft'),
-  draftDone:  $('screen-draft-done'),
-  bracket:    $('screen-bracket'),
-  series:     $('screen-series'),
-  gameover:   $('screen-gameover')
+  start:    document.getElementById('screen-start'),
+  pick:     document.getElementById('screen-pick'),
+  battle:   document.getElementById('screen-battle'),
+  gameover: document.getElementById('screen-gameover')
 };
 
-const playerList         = $('player-list');
-const draftRoundLabel    = $('draft-round-label');
-const draftTeamName      = $('draft-team-name');
-const draftTeamSeason    = $('draft-team-season');
-const draftMessage       = $('draft-message');
-const draftMessageText   = $('draft-message-text');
+const btnStart       = document.getElementById('btn-start');
+const btnRollCat     = document.getElementById('btn-roll-category');
+const btnNextRound   = document.getElementById('btn-next-round');
+const btnRestart     = document.getElementById('btn-restart');
+
+const pickTeamName   = document.getElementById('pick-team-name');
+const playerGrid     = document.getElementById('player-grid');
+
+const scorePlayerEl  = document.getElementById('score-player');
+const scoreAIEl      = document.getElementById('score-ai');
+
+const roundCategory  = document.getElementById('round-category');
+const categoryLabel  = document.getElementById('category-label');
+const roundResult    = document.getElementById('round-result');
+const resultMessage  = document.getElementById('result-message');
+
+const gameoverTitle  = document.getElementById('gameover-title');
+const gameoverScore  = document.getElementById('gameover-score');
 
 
 // -------------------------------------------------------------
-//  3. UTILITÁRIOS GERAIS
+//  3. FUNÇÕES UTILITÁRIAS
 // -------------------------------------------------------------
 
-function randomItem(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
+// Retorna um número inteiro aleatório entre 0 e (max - 1)
+function randomIndex(max) {
+  return Math.floor(Math.random() * max);
 }
 
-// Embaralha um array (algoritmo Fisher-Yates)
-function shuffle(arr) {
-  const a = [...arr];
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
+// Retorna um item aleatório de um array
+function randomItem(array) {
+  return array[randomIndex(array.length)];
 }
 
-// Troca a tela ativa
-function goTo(screenName) {
-  Object.values(screens).forEach(s => s.classList.remove('active'));
+
+// -------------------------------------------------------------
+//  4. NAVEGAÇÃO ENTRE TELAS
+//  Remove a classe "active" de todas as telas e
+//  adiciona apenas na tela desejada.
+// -------------------------------------------------------------
+function goToScreen(screenName) {
+  Object.values(screens).forEach(function(screen) {
+    screen.classList.remove('active');
+  });
   screens[screenName].classList.add('active');
 }
 
-// Cor do badge de overall
-function overallClass(v) {
-  if (v >= 95) return 'overall-elite';
-  if (v >= 90) return 'overall-allstar';
-  if (v >= 80) return 'overall-starter';
-  return 'overall-role';
-}
-
-// Média overall de um time do data.js
-function teamAvg(team) {
-  const sum = team.players.reduce((s, p) => s + p.overall, 0);
-  return Math.round(sum / team.players.length);
-}
-
-// Anima o número quando muda (bump)
-function bumpNum(elId) {
-  const el = $(elId);
-  el.classList.remove('bump');
-  void el.offsetWidth;
-  el.classList.add('bump');
-}
-
 
 // -------------------------------------------------------------
-//  4. MENSAGEM DE AVISO (DRAFT)
-// -------------------------------------------------------------
-function showMessage(text) {
-  draftMessageText.textContent = text;
-  draftMessage.classList.remove('hidden', 'shake');
-  void draftMessage.offsetWidth;
-  draftMessage.classList.add('shake');
-}
-
-function hideMessage() {
-  draftMessage.classList.add('hidden');
-}
-
-
-// -------------------------------------------------------------
-//  5. DRAFT — montar o quinteto
+//  5. FUNÇÕES DO JOGO
 // -------------------------------------------------------------
 
-function startDraft() {
-  state.lineup      = { PG: null, SG: null, SF: null, PF: null, C: null };
-  state.draftRound  = 1;
-  state.usedTeamIds = [];
-  state.currentTeam = null;
-  state.playoffs    = { round: 0, opponents: [], confB: {}, userAvg: 0,
-                        series: { u: 0, ai: 0 }, gameNum: 0 };
+// Reseta o estado para uma nova partida
+function resetGame() {
+  gameState.team         = null;
+  gameState.playerCard   = null;
+  gameState.aiCard       = null;
+  gameState.currentStat  = null;
+  gameState.scorePlayer  = 0;
+  gameState.scoreAI      = 0;
+  gameState.roundsPlayed = 0;
 
-  resetCourt();
-  updateProgress();
-  drawTeam();
+  scorePlayerEl.textContent = '0';
+  scoreAIEl.textContent     = '0';
 }
 
-function drawTeam() {
-  const available = NBA_TEAMS.filter(t => !state.usedTeamIds.includes(t.id));
-  const pool      = available.length > 0 ? available : NBA_TEAMS;
+// Sorteia um time aleatório e monta a tela de escolha
+function startGame() {
+  resetGame();
 
-  state.currentTeam = randomItem(pool);
-  state.usedTeamIds.push(state.currentTeam.id);
+  // Sorteia um time da lista NBA_TEAMS (definida em data.js)
+  gameState.team = randomItem(NBA_TEAMS);
 
-  draftRoundLabel.textContent  = `Rodada ${state.draftRound}`;
-  draftTeamName.textContent    = state.currentTeam.name;
-  draftTeamSeason.textContent  = state.currentTeam.season;
+  // Atualiza o nome do time na tela de escolha
+  pickTeamName.textContent = gameState.team.name + ' — ' + gameState.team.season;
 
-  hideMessage();
-  renderPlayerList(state.currentTeam.players);
-  goTo('draft');
+  // Monta a grade de mini-cartas para o usuário escolher
+  renderPickGrid(gameState.team.players);
+
+  // Navega para a tela de escolha
+  goToScreen('pick');
 }
 
-function renderPlayerList(players) {
-  playerList.innerHTML = '';
-  players.forEach(player => {
-    const taken = state.lineup[player.position] !== null;
-    const li    = document.createElement('li');
-    li.className = 'player-list-item' + (taken ? ' taken' : '');
-
-    li.innerHTML = `
-      <span class="pli-number">#${player.number}</span>
-      <span class="pli-name">${player.name}</span>
-      <span class="pli-pos">${player.position}</span>
-      <span class="pli-overall ${overallClass(player.overall)}">${player.overall}</span>`;
-
-    if (!taken) {
-      li.addEventListener('click', () => selectPlayer(player));
-    }
-
-    playerList.appendChild(li);
-  });
-}
-
-function selectPlayer(player) {
-  if (state.lineup[player.position] !== null) {
-    showMessage(`Posição ${player.position} já ocupada. Escolha outro jogador.`);
-    return;
-  }
-
-  hideMessage();
-  state.lineup[player.position] = player;
-
-  fillSlot(player);
-  updateProgress();
-
-  if (Object.values(state.lineup).every(p => p !== null)) {
-    setTimeout(draftComplete, 600);
-    return;
-  }
-
-  state.draftRound++;
-  drawTeam();
-}
-
-// Quinteto completo — mostra resumo antes dos playoffs
-function draftComplete() {
-  const positions = ['PG', 'SG', 'SF', 'PF', 'C'];
-  const ul        = $('draftdone-lineup');
-  ul.innerHTML    = '';
-
-  positions.forEach(pos => {
-    const p  = state.lineup[pos];
-    const li = document.createElement('li');
-    li.className = 'gameover-lineup-item';
-    li.innerHTML = `
-      <span class="gameover-pos">${pos}</span>
-      <p class="gameover-player-name">${p.name}</p>
-      <span class="gameover-player-overall ${overallClass(p.overall)}">${p.overall}</span>`;
-    ul.appendChild(li);
-  });
-
-  const avg = Math.round(
-    positions.reduce((s, pos) => s + state.lineup[pos].overall, 0) / 5
-  );
-  $('draftdone-overall').textContent = avg;
-
-  goTo('draftDone');
-}
-
-
-// -------------------------------------------------------------
-//  6. QUADRA SVG (visual do quinteto)
-// -------------------------------------------------------------
-function fillSlot(player) {
-  const g = $(`slot-${player.position}`);
-  if (!g) return;
-
-  // Atualiza o texto do nome abreviado no círculo da quadra
-  const nameEl = g.querySelector('.slot-player-name');
-  const lastName = player.name.split(' ').pop();
-  nameEl.textContent = lastName;
-
-  g.classList.add('slot-filled');
-}
-
-function updateProgress() {
-  const positions = ['PG', 'SG', 'SF', 'PF', 'C'];
-  positions.forEach(pos => {
-    const li = document.querySelector(`#positions-status [data-pos="${pos}"]`);
-    if (!li) return;
-    const check = li.querySelector('.pos-check');
-    if (state.lineup[pos]) {
-      li.classList.add('done');
-      check.textContent = '✓';
-    } else {
-      li.classList.remove('done');
-      check.textContent = '○';
-    }
-  });
-}
-
-function resetCourt() {
-  ['PG', 'SG', 'SF', 'PF', 'C'].forEach(pos => {
-    const g = $(`slot-${pos}`);
-    if (!g) return;
-    g.classList.remove('slot-filled');
-    g.querySelector('.slot-player-name').textContent = '—';
-  });
-}
-
-
-// =============================================================
-//  7. PLAYOFFS
-// =============================================================
-
-const ROUND_NAMES = {
-  1: 'Quartas de Final',
-  2: 'Semifinais',
-  3: 'Finais de Conferência',
-  4: 'Final da NBA'
-};
-
-// Simula um jogo entre dois times com base no overall médio.
-// Retorna true se o time A vencer.
-function simGame(avgA, avgB) {
-  // Faixa apertada (30–70%) para manter as séries competitivas mesmo com grande diferença.
-  const prob = Math.max(0.30, Math.min(0.70, 0.5 + (avgA - avgB) * 0.010));
-  return Math.random() < prob;
-}
-
-// Simula uma série completa melhor de 7. Retorna o time vencedor.
-function autoSimSeries(teamA, teamB) {
-  const avgA = teamAvg(teamA);
-  const avgB = teamAvg(teamB);
-  let wA = 0, wB = 0;
-  while (wA < 4 && wB < 4) {
-    simGame(avgA, avgB) ? wA++ : wB++;
-  }
-  return wA === 4 ? teamA : teamB;
-}
-
-// Gera um score realista de NBA para um jogo (ex: 108 × 97)
-function generateScore(winnerAvg, loserAvg) {
-  const wScore = 90 + Math.floor(Math.random() * 35);            // 90–124
-  const diff   = 3 + Math.floor(Math.random() * 22);             // 3–24
-  const lScore = Math.max(70, wScore - diff);
-  return { winner: wScore, loser: lScore };
-}
-
-// Inicializa os playoffs após o draft
-function initPlayoffs() {
-  // Overall médio do quinteto do usuário
-  const userPlayers = Object.values(state.lineup);
-  state.playoffs.userAvg = Math.round(
-    userPlayers.reduce((s, p) => s + p.overall, 0) / userPlayers.length
-  );
-
-  // Embaralha todos os times e divide
-  const pool = shuffle(NBA_TEAMS);
-
-  // 4 oponentes para a jornada do usuário (Quartas, Semis, Conf.Finals, Finals)
-  // Os 3 primeiros são os oponentes diretos do usuário na Conf. A
-  // Mas o 4º (Final) vem da Conf. B auto-simulada
-  const confAOpps = pool.slice(0, 3);  // Oponentes R1, R2, R3 do usuário
-  const confBTeams = pool.slice(3, 7); // 4 times da Conf. B
-
-  // Conf. B: simula QF1, QF2 e depois SF para achar o campeão
-  const bQF1w = autoSimSeries(confBTeams[0], confBTeams[1]);
-  const bQF2w = autoSimSeries(confBTeams[2], confBTeams[3]);
-  const bChamp = autoSimSeries(bQF1w, bQF2w);
-
-  // 4 oponentes do usuário: [R1, R2, R3, R4(Finals = Conf B Champ)]
-  state.playoffs.opponents = [...confAOpps, bChamp];
-  state.playoffs.round     = 1;
-  state.playoffs.series    = { u: 0, ai: 0 };
-  state.playoffs.gameNum   = 0;
-
-  // Guarda dados da Conf. B para exibir no bracket
-  state.playoffs.confB = {
-    teams: confBTeams,
-    qf1w: bQF1w,
-    qf2w: bQF2w,
-    champ: bChamp
-  };
-
-  showBracket();
-}
-
-// Exibe e atualiza o bracket
-function showBracket() {
-  renderBracket();
-  goTo('bracket');
-}
-
-function renderBracket() {
-  const po    = state.playoffs;
-  const round = po.round;
-  const opps  = po.opponents;
-  const confB = po.confB;
-
-  // Helper: status de um round (upcoming / current / won)
-  const statusOf = r => {
-    if (r < round)  return 'won';
-    if (r === round) return 'current';
-    return 'upcoming';
-  };
-
-  // Helper: nome do oponente de cada round
-  const oppName = r => opps[r - 1]
-    ? `${opps[r - 1].name} <small>${opps[r - 1].season}</small>`
-    : '?';
-
-  const oppAvgLabel = r => opps[r - 1]
-    ? `<span class="btr-avg ${overallClass(teamAvg(opps[r - 1]))}">${teamAvg(opps[r - 1])}</span>`
-    : '';
-
-  // Ícone de status
-  const icon = r => {
-    if (r < round)   return '<span class="btr-badge">✅</span>';
-    if (r === round) return '<span class="btr-badge">🏀</span>';
-    return '<span class="btr-badge" style="opacity:.3">🔒</span>';
-  };
-
-  // Monta cada round da Conf. A (chave do usuário)
-  const confARows = [1, 2, 3, 4].map(r => `
-    <div class="bracket-matchup ${statusOf(r) === 'current' ? 'current' : ''}">
-      <div class="bracket-matchup-label">${ROUND_NAMES[r]}</div>
-      <div class="bracket-team-row is-user">
-        <div class="btr-name">Seu Time</div>
-        <span class="btr-avg ${overallClass(po.userAvg)}">${po.userAvg}</span>
-        ${icon(r)}
-      </div>
-      <div class="bracket-vs">vs</div>
-      <div class="bracket-team-row ${r < round ? 'is-loser' : ''}">
-        <div class="btr-name">${oppName(r)}</div>
-        ${oppAvgLabel(r)}
-      </div>
-    </div>
-  `).join('');
-
-  // Conf. B — mostrar os 4 times e quem avançou
-  const bTeams = confB.teams || [];
-  const confBRows = bTeams.length ? `
-    <div class="bracket-matchup">
-      <div class="bracket-matchup-label">Quartas</div>
-      <div class="bracket-team-row ${confB.qf1w?.id === bTeams[0]?.id ? 'is-winner' : 'is-loser'}">
-        <div class="btr-name">${bTeams[0]?.name || '?'} <small>${bTeams[0]?.season || ''}</small></div>
-        <span class="btr-avg">${bTeams[0] ? teamAvg(bTeams[0]) : ''}</span>
-      </div>
-      <div class="bracket-vs">vs</div>
-      <div class="bracket-team-row ${confB.qf1w?.id === bTeams[1]?.id ? 'is-winner' : 'is-loser'}">
-        <div class="btr-name">${bTeams[1]?.name || '?'} <small>${bTeams[1]?.season || ''}</small></div>
-        <span class="btr-avg">${bTeams[1] ? teamAvg(bTeams[1]) : ''}</span>
-      </div>
-    </div>
-    <div class="bracket-matchup">
-      <div class="bracket-matchup-label">Quartas</div>
-      <div class="bracket-team-row ${confB.qf2w?.id === bTeams[2]?.id ? 'is-winner' : 'is-loser'}">
-        <div class="btr-name">${bTeams[2]?.name || '?'} <small>${bTeams[2]?.season || ''}</small></div>
-        <span class="btr-avg">${bTeams[2] ? teamAvg(bTeams[2]) : ''}</span>
-      </div>
-      <div class="bracket-vs">vs</div>
-      <div class="bracket-team-row ${confB.qf2w?.id === bTeams[3]?.id ? 'is-winner' : 'is-loser'}">
-        <div class="btr-name">${bTeams[3]?.name || '?'} <small>${bTeams[3]?.season || ''}</small></div>
-        <span class="btr-avg">${bTeams[3] ? teamAvg(bTeams[3]) : ''}</span>
-      </div>
-    </div>
-    <div class="bracket-matchup">
-      <div class="bracket-matchup-label">Semifinais + Final Conf.</div>
-      <div class="bracket-team-row is-winner">
-        <div class="btr-name">🏆 ${confB.champ?.name || '?'} <small>${confB.champ?.season || ''}</small></div>
-        <span class="btr-avg ${overallClass(teamAvg(confB.champ))}">${teamAvg(confB.champ)}</span>
-        <span class="btr-badge">✅</span>
-      </div>
-    </div>
-  ` : '';
-
-  // Finals center box
-  const finalsTeamA = round > 4 ? 'Seu Time' : (round === 4 ? 'Seu Time' : '?');
-  const finalsTeamB = confB.champ
-    ? `${confB.champ.name} (${confB.champ.season})`
-    : '?';
-
-  $('bracket-board').innerHTML = `
-    <div class="bracket-conf">
-      <div class="bracket-conf-title">Conferência A — Sua Chave</div>
-      ${confARows}
-    </div>
-
-    <div class="bracket-finals-col">
-      <div class="bracket-finals-box">
-        <div class="bracket-finals-icon">🏆</div>
-        <div class="bracket-finals-label">Final da NBA</div>
-        <div class="bracket-finals-team ${round < 4 ? 'tbd' : ''}">${finalsTeamA}</div>
-        <div class="bracket-finals-team" style="color:rgba(255,255,255,.5);font-size:.65rem;margin:.2rem 0">vs</div>
-        <div class="bracket-finals-team">${finalsTeamB}</div>
-      </div>
-    </div>
-
-    <div class="bracket-conf">
-      <div class="bracket-conf-title">Conferência B — Auto Simulado</div>
-      ${confBRows}
-    </div>
-  `;
-}
-
-
-// -------------------------------------------------------------
-//  8. SÉRIE — jogo a jogo
-// -------------------------------------------------------------
-function startSeries() {
-  const po  = state.playoffs;
-  const opp = po.opponents[po.round - 1];
-
-  po.series  = { u: 0, ai: 0 };
-  po.gameNum = 0;
-
-  // Badge da rodada
-  $('series-round-badge').textContent = ROUND_NAMES[po.round];
-
-  // Placar zerado
-  $('series-u-wins').textContent  = '0';
-  $('series-ai-wins').textContent = '0';
-  $('series-opp-name').textContent = `${opp.name} (${opp.season})`;
-
-  // Limpa log
-  $('series-log').innerHTML = '';
-
-  // Botões
-  $('btn-sim-game').classList.remove('hidden');
-  $('btn-sim-game').disabled = false;
-  $('btn-series-next').classList.add('hidden');
-
-  // Preenche roster do usuário
-  renderSeriesRoster('series-user-list', Object.values(state.lineup), po.userAvg, 'series-user-avg');
-
-  // Preenche roster do oponente
-  $('series-opp-title').textContent = `${opp.name} · ${opp.season}`;
-  const oppAvg = teamAvg(opp);
-  renderSeriesRoster('series-opp-list', opp.players, oppAvg, 'series-opp-avg');
-
-  goTo('series');
-}
-
-function renderSeriesRoster(listId, players, avg, avgId) {
-  const ul = $(listId);
-  ul.innerHTML = '';
-  players.forEach(p => {
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <span class="stc-pos">${p.position}</span>
-      <span class="stc-pname">${p.name}</span>
-      <span class="stc-ov ${overallClass(p.overall)}">${p.overall}</span>`;
-    ul.appendChild(li);
-  });
-  $(avgId).textContent = avg;
-}
-
-// Distribui pontos totais em 4 quartos de forma realista
-function splitIntoQuarters(total) {
-  const qs = [];
-  let remaining = total;
-  for (let i = 0; i < 3; i++) {
-    const avg = remaining / (4 - i);
-    const q   = Math.max(14, Math.min(36, Math.round(avg * (0.75 + Math.random() * 0.5))));
-    qs.push(q);
-    remaining -= q;
-  }
-  qs.push(Math.max(10, remaining));
-  return qs;
-}
-
-// Gera lista de eventos de pontuação de um quarto (2 ou 3 pts por posse)
-function buildPossessions(userTarget, aiTarget) {
-  const events = [];
-  let u = userTarget, a = aiTarget;
-  while (u > 0 || a > 0) {
-    if (u > 0) {
-      const pts = (u >= 3 && Math.random() < 0.28) ? 3 : Math.min(2, u);
-      events.push({ team: 'user', pts });
-      u -= pts;
-    }
-    if (a > 0) {
-      const pts = (a >= 3 && Math.random() < 0.28) ? 3 : Math.min(2, a);
-      events.push({ team: 'ai', pts });
-      a -= pts;
-    }
-  }
-  // Embaralha levemente para não ser sempre alternado
-  for (let i = events.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [events[i], events[j]] = [events[j], events[i]];
-  }
-  return events;
-}
-
-// Simula um jogo da série atual — animação quarto a quarto
-function simOneGame() {
-  const po       = state.playoffs;
-  const opp      = po.opponents[po.round - 1];
-  const oppAvg   = teamAvg(opp);
-  const userWins = simGame(po.userAvg, oppAvg);
-
-  po.gameNum++;
-
-  // Placar final pré-determinado
-  const { winner: ws, loser: ls } = generateScore(
-    userWins ? po.userAvg : oppAvg,
-    userWins ? oppAvg    : po.userAvg
-  );
-  const userFinal = userWins ? ws : ls;
-  const aiFinal   = userWins ? ls : ws;
-
-  // Distribui em 4 quartos
-  const userQs = splitIntoQuarters(userFinal);
-  const aiQs   = splitIntoQuarters(aiFinal);
-
-  // UI: desabilita botão e mostra painel ao vivo
-  $('btn-sim-game').disabled = true;
-  const panel = $('live-score-panel');
-  panel.classList.remove('hidden');
-  $('live-score-opp-name').textContent = opp.name;
-  $('live-score-user').textContent = '0';
-  $('live-score-ai').textContent   = '0';
-
-  // Reset bolinhas dos quartos
-  document.querySelectorAll('.qdot').forEach(d => {
-    d.classList.remove('done', 'active');
-  });
-
-  let userRunning = 0;
-  let aiRunning   = 0;
-  const QUARTER_LABELS = ['1º QUARTO', '2º QUARTO', '3º QUARTO', '4º QUARTO'];
-  const INTERVAL_MS    = 22; // velocidade por posse
-
-  function animateQuarter(qIndex) {
-    if (qIndex >= 4) {
-      // Animação completa — finaliza o jogo
-      setTimeout(() => {
-        panel.classList.add('hidden');
-        document.querySelectorAll('.qdot').forEach(d => d.classList.remove('done', 'active'));
-        finishGame(userWins, userFinal, aiFinal);
-      }, 700);
-      return;
-    }
-
-    // Atualiza label e bolinha
-    $('live-quarter-label').textContent = QUARTER_LABELS[qIndex];
-    document.querySelectorAll('.qdot').forEach((d, i) => {
-      d.classList.remove('done', 'active');
-      if (i < qIndex)   d.classList.add('done');
-      if (i === qIndex) d.classList.add('active');
+// Cria as mini-cartas de escolha e insere no HTML
+function renderPickGrid(players) {
+  // Limpa qualquer conteúdo anterior na grade
+  playerGrid.innerHTML = '';
+
+  players.forEach(function(player) {
+    // Cria o elemento da carta
+    const card = document.createElement('div');
+    card.className = 'pick-card';
+
+    // Monta o HTML interno da carta
+    card.innerHTML = `
+      <img
+        class="pick-card-photo"
+        src="${player.image}"
+        alt="${player.name}"
+        onerror="this.src='assets/placeholder.png'"
+      />
+      <p class="pick-card-name">${player.name}</p>
+      <p class="pick-card-position">${player.position}</p>
+      <span class="pick-card-overall">${player.stats.overall}</span>
+    `;
+
+    // Quando o usuário clica na carta, escolhe este jogador
+    card.addEventListener('click', function() {
+      pickPlayer(player);
     });
 
-    const possessions = buildPossessions(userQs[qIndex], aiQs[qIndex]);
-    let pIdx = 0;
-
-    const ticker = setInterval(() => {
-      if (pIdx >= possessions.length) {
-        clearInterval(ticker);
-        // Pausa entre quartos (mais longa no intervalo Q2→Q3)
-        const pause = qIndex === 1 ? 900 : 450;
-        setTimeout(() => animateQuarter(qIndex + 1), pause);
-        return;
-      }
-
-      const ev = possessions[pIdx++];
-      const elId = ev.team === 'user' ? 'live-score-user' : 'live-score-ai';
-      if (ev.team === 'user') userRunning += ev.pts;
-      else                    aiRunning   += ev.pts;
-
-      const el = $(elId);
-      el.textContent = ev.team === 'user' ? userRunning : aiRunning;
-
-      // Flash dourado no número que acabou de marcar
-      el.classList.remove('scored');
-      void el.offsetWidth;
-      el.classList.add('scored');
-      setTimeout(() => el.classList.remove('scored'), 180);
-    }, INTERVAL_MS);
-  }
-
-  animateQuarter(0);
+    playerGrid.appendChild(card);
+  });
 }
 
-// Finaliza o jogo após a animação: atualiza série, log e botões
-function finishGame(userWins, userScore, aiScore) {
-  const po  = state.playoffs;
-  const opp = po.opponents[po.round - 1];
+// Registra a escolha do usuário e faz a IA escolher
+function pickPlayer(player) {
+  gameState.playerCard = player;
 
-  if (userWins) po.series.u++; else po.series.ai++;
+  // A IA escolhe um jogador diferente do usuário, aleatoriamente
+  const remaining = gameState.team.players.filter(function(p) {
+    return p.id !== player.id;
+  });
+  gameState.aiCard = randomItem(remaining);
 
-  $('series-u-wins').textContent  = po.series.u;
-  $('series-ai-wins').textContent = po.series.ai;
-  bumpNum(userWins ? 'series-u-wins' : 'series-ai-wins');
+  // Preenche as cartas na tela de batalha
+  renderBattleCards();
 
-  // Linha no log
-  const log  = $('series-log');
-  const item = document.createElement('li');
-  item.className = `series-log-item ${userWins ? 'user-won' : 'ai-won'}`;
-  item.innerHTML = `
-    <span class="log-num">Jogo ${po.gameNum}</span>
-    <span class="log-score">Seu Time ${userScore} × ${aiScore} ${opp.name}</span>
-    <span class="log-result">${userWins ? 'Vitória ✓' : 'Derrota ✗'}</span>`;
-  log.appendChild(item);
-  log.scrollTop = log.scrollHeight;
+  // Navega para a arena
+  goToScreen('battle');
+}
 
-  // Fim da série?
-  if (po.series.u === 4 || po.series.ai === 4) {
-    $('btn-sim-game').classList.add('hidden');
-    $('btn-series-next').classList.remove('hidden');
-    $('btn-series-next').textContent =
-      po.series.u === 4 ? 'Avançar →' : 'Ver Resultado';
+// Preenche os dados nas cartas da tela de batalha
+function renderBattleCards() {
+  fillCard('player', gameState.playerCard);
+  fillCard('ai', gameState.aiCard);
+
+  // Esconde o resultado da rodada anterior e mostra o botão de sortear
+  roundResult.classList.add('hidden');
+  btnRollCat.classList.remove('hidden');
+  categoryLabel.textContent = 'Categoria: —';
+
+  // Remove destaques de rodadas anteriores
+  clearStatHighlights();
+}
+
+// Preenche uma carta (player ou ai) com os dados do jogador
+function fillCard(side, player) {
+  document.getElementById('card-' + side + '-team').textContent   = player.team + ' · ' + player.season;
+  document.getElementById('card-' + side + '-img').src            = player.image;
+  document.getElementById('card-' + side + '-img').alt            = player.name;
+  document.getElementById('card-' + side + '-name').textContent   = player.name;
+  document.getElementById('card-' + side + '-position').textContent = player.position;
+
+  // Preenche cada atributo usando as chaves de STAT_KEYS (definido em data.js)
+  STAT_KEYS.forEach(function(key) {
+    const el = document.getElementById(side + '-stat-' + key);
+    if (el) el.textContent = player.stats[key];
+  });
+}
+
+// Remove as classes win/lose/active de todas as linhas de atributo
+function clearStatHighlights() {
+  document.querySelectorAll('.stat-row').forEach(function(row) {
+    row.classList.remove('win', 'lose', 'active');
+  });
+}
+
+// Sorteia a categoria da rodada
+function rollCategory() {
+  gameState.currentStat = randomItem(STAT_KEYS);
+
+  // Mostra o nome traduzido da categoria
+  categoryLabel.textContent = 'Categoria: ' + STAT_LABELS[gameState.currentStat];
+
+  // Destaca a linha sorteada em ambas as cartas
+  clearStatHighlights();
+  document.querySelectorAll('[data-stat="' + gameState.currentStat + '"]').forEach(function(row) {
+    row.classList.add('active');
+  });
+
+  // Esconde o botão de sortear e executa a comparação
+  btnRollCat.classList.add('hidden');
+  compareStats();
+}
+
+// Compara os atributos e decide o resultado da rodada
+function compareStats() {
+  const stat      = gameState.currentStat;
+  const valPlayer = gameState.playerCard.stats[stat];
+  const valAI     = gameState.aiCard.stats[stat];
+
+  let message = '';
+  let resultClass = '';
+
+  if (valPlayer > valAI) {
+    gameState.scorePlayer++;
+    message = '🏆 Você venceu esta rodada!';
+    resultClass = 'win';
+    highlightStat(stat, 'player', 'win');
+    highlightStat(stat, 'ai', 'lose');
+  } else if (valAI > valPlayer) {
+    gameState.scoreAI++;
+    message = '❌ A IA venceu esta rodada.';
+    resultClass = 'lose';
+    highlightStat(stat, 'player', 'lose');
+    highlightStat(stat, 'ai', 'win');
   } else {
-    $('btn-sim-game').disabled = false;
+    message = '🤝 Empate nesta rodada!';
+    resultClass = 'tie';
+  }
+
+  // Atualiza o placar na tela
+  scorePlayerEl.textContent = gameState.scorePlayer;
+  scoreAIEl.textContent     = gameState.scoreAI;
+
+  // Exibe a mensagem de resultado
+  resultMessage.textContent = message;
+  resultMessage.className   = 'result-message ' + resultClass;
+
+  gameState.roundsPlayed++;
+
+  // Mostra o resultado e decide se tem próxima rodada ou fim de jogo
+  roundResult.classList.remove('hidden');
+
+  if (gameState.roundsPlayed >= gameState.maxRounds) {
+    btnNextRound.textContent = 'Ver Resultado Final';
+  } else {
+    btnNextRound.textContent = 'Próxima Rodada';
   }
 }
 
-// Botão "Avançar" após série terminar
-function seriesResult() {
-  const po = state.playoffs;
-
-  if (po.series.u === 4) {
-    // Usuário venceu a série
-    if (po.round === 4) {
-      showChampion();
-    } else {
-      po.round++;
-      po.series  = { u: 0, ai: 0 };
-      po.gameNum = 0;
-      showBracket();
-    }
-  } else {
-    // Usuário perdeu → eliminado
-    showEliminated();
+// Aplica a classe win ou lose na linha do atributo de uma carta específica
+function highlightStat(stat, side, resultClass) {
+  const card = document.getElementById('card-' + side);
+  const row  = card.querySelector('[data-stat="' + stat + '"]');
+  if (row) {
+    row.classList.remove('active');
+    row.classList.add(resultClass);
   }
+}
+
+// Avança para a próxima rodada ou para o fim do jogo
+function nextRound() {
+  if (gameState.roundsPlayed >= gameState.maxRounds) {
+    showGameOver();
+  } else {
+    renderBattleCards();
+  }
+}
+
+// Exibe a tela de fim de jogo com o resultado final
+function showGameOver() {
+  const sp = gameState.scorePlayer;
+  const sa = gameState.scoreAI;
+
+  let title = '';
+  if (sp > sa) {
+    title = '🏆 Você Ganhou!';
+  } else if (sa > sp) {
+    title = '💀 A IA Ganhou!';
+  } else {
+    title = '🤝 Empate!';
+  }
+
+  gameoverTitle.textContent = title;
+  gameoverScore.textContent = 'Placar final — Você ' + sp + ' × ' + sa + ' IA';
+
+  goToScreen('gameover');
 }
 
 
 // -------------------------------------------------------------
-//  9. FIM — campeão ou eliminado
+//  6. EVENT LISTENERS
+//  Conecta cada botão à sua função.
+//  Isso é executado assim que a página carrega.
 // -------------------------------------------------------------
-function showChampion() {
-  const avg  = calcLineupAvg();
-  recordGame('champion', null, avg);
-
-  const card = $('gameover-card');
-  card.classList.remove('eliminated');
-
-  $('gameover-icon').textContent  = '🏆';
-  $('gameover-title').textContent = 'CAMPEÃO DA NBA!';
-  $('gameover-sub').textContent   = 'Você venceu os playoffs e conquistou o título!';
-
-  renderFinalLineup();
-  goTo('gameover');
-}
-
-function showEliminated() {
-  const po   = state.playoffs;
-  const opp  = po.opponents[po.round - 1];
-  const avg  = calcLineupAvg();
-  const result = po.round === 4 ? 'finalist' : 'elim';
-
-  recordGame(result, po.round, avg);
-
-  const card = $('gameover-card');
-  card.classList.add('eliminated');
-
-  $('gameover-icon').textContent  = po.round === 4 ? '🥈' : '💀';
-  $('gameover-title').textContent = po.round === 4 ? 'Vice-Campeão!' : 'Eliminado!';
-  $('gameover-sub').textContent   =
-    `${opp.name} (${opp.season}) venceu a série ${po.series.ai}–${po.series.u} nas ${ROUND_NAMES[po.round]}.`;
-
-  renderFinalLineup();
-  goTo('gameover');
-}
-
-// Calcula o overall médio do quinteto atual
-function calcLineupAvg() {
-  const positions = ['PG', 'SG', 'SF', 'PF', 'C'];
-  const total = positions.reduce((s, pos) => s + (state.lineup[pos]?.overall ?? 0), 0);
-  return Math.round(total / 5);
-}
-
-function renderFinalLineup() {
-  const positions = ['PG', 'SG', 'SF', 'PF', 'C'];
-  const ul = $('gameover-lineup');
-  ul.innerHTML = '';
-
-  positions.forEach(pos => {
-    const p  = state.lineup[pos];
-    if (!p) return;
-    const li = document.createElement('li');
-    li.className = 'gameover-lineup-item';
-    li.innerHTML = `
-      <span class="gameover-pos">${pos}</span>
-      <p class="gameover-player-name">${p.name}</p>
-      <span class="gameover-player-overall ${overallClass(p.overall)}">${p.overall}</span>`;
-    ul.appendChild(li);
-  });
-
-  const avg = Math.round(
-    positions.reduce((s, pos) => s + (state.lineup[pos]?.overall ?? 0), 0) / 5
-  );
-  $('gameover-overall').textContent = avg;
-}
-
-
-// =============================================================
-//  10. LOCAL STORAGE — persistência de estatísticas
-// =============================================================
-
-const STORAGE_KEY = 'nba_draft_stats';
-
-// Estrutura padrão quando não há dados salvos ainda
-const DEFAULT_STATS = {
-  games:    0,   // total de partidas jogadas
-  titles:   0,   // títulos da NBA
-  finals:   0,   // vezes que chegou à Final (incluindo títulos)
-  bestAvg:  0,   // maior overall médio de quinteto já montado
-  history:  []   // últimas 10 partidas
-};
-
-// Lê os dados do localStorage (ou retorna o padrão se não existir)
-function loadStats() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULT_STATS, ...JSON.parse(raw) } : { ...DEFAULT_STATS };
-  } catch {
-    // Se o JSON estiver corrompido, recomeça do zero
-    return { ...DEFAULT_STATS };
-  }
-}
-
-// Salva os dados no localStorage
-function saveStats(stats) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
-}
-
-// Registra o resultado de uma partida e atualiza os contadores
-function recordGame(result, eliminatedAtRound, lineupAvg) {
-  const stats = loadStats();
-
-  stats.games++;
-
-  if (result === 'champion') {
-    stats.titles++;
-    stats.finals++;
-  } else if (result === 'finalist') {
-    stats.finals++;
-  }
-
-  if (lineupAvg > stats.bestAvg) {
-    stats.bestAvg = lineupAvg;
-  }
-
-  // Monta o item de histórico
-  const roundLabel = eliminatedAtRound
-    ? `Eliminado nas ${ROUND_NAMES[eliminatedAtRound]}`
-    : 'Campeão da NBA 🏆';
-
-  stats.history.unshift({
-    result,
-    label:  roundLabel,
-    avg:    lineupAvg,
-    date:   new Date().toLocaleDateString('pt-BR')
-  });
-
-  // Guarda só as últimas 10 partidas
-  stats.history = stats.history.slice(0, 10);
-
-  saveStats(stats);
-}
-
-// Renderiza o painel de stats na tela inicial
-function renderStatsPanel() {
-  const stats  = loadStats();
-  const panel  = $('stats-panel');
-
-  // Se nunca jogou, não mostra o painel
-  if (stats.games === 0) {
-    panel.classList.add('hidden');
-    return;
-  }
-
-  panel.classList.remove('hidden');
-
-  $('stat-games').textContent  = stats.games;
-  $('stat-titles').textContent = stats.titles;
-  $('stat-finals').textContent = stats.finals;
-  $('stat-best-avg').textContent = stats.bestAvg > 0
-    ? `<span class="${overallClass(stats.bestAvg)}">${stats.bestAvg}</span>`
-    : '—';
-
-  // innerHTML para aplicar a cor do overall
-  $('stat-best-avg').innerHTML = stats.bestAvg > 0
-    ? `<span class="${overallClass(stats.bestAvg)}">${stats.bestAvg}</span>`
-    : '—';
-
-  // Histórico das últimas partidas
-  const ul = $('stats-history');
-  ul.innerHTML = '';
-
-  stats.history.forEach(entry => {
-    const li = document.createElement('li');
-    li.className = `history-item ${entry.result}`;
-    li.innerHTML = `
-      <span class="history-result">${entry.result === 'champion' ? '🏆 Título' : entry.result === 'finalist' ? '🥈 Final' : '❌ Elim.'}</span>
-      <span class="history-detail">${entry.label} · ${entry.date}</span>
-      <span class="history-ovr ${overallClass(entry.avg)}">${entry.avg}</span>
-    `;
-    ul.appendChild(li);
-  });
-}
-
-// Limpa todo o histórico
-function clearStats() {
-  localStorage.removeItem(STORAGE_KEY);
-  renderStatsPanel();
-}
-
-
-// =============================================================
-//  11. EVENT LISTENERS
-// =============================================================
-$('btn-start').addEventListener('click', startDraft);
-$('btn-go-playoffs').addEventListener('click', initPlayoffs);
-$('btn-start-series').addEventListener('click', startSeries);
-$('btn-sim-game').addEventListener('click', simOneGame);
-$('btn-series-next').addEventListener('click', seriesResult);
-$('btn-restart').addEventListener('click', () => { renderStatsPanel(); startDraft(); });
-$('btn-clear-stats').addEventListener('click', clearStats);
-
-// Mostra stats ao carregar a página
-renderStatsPanel();
+btnStart.addEventListener('click', startGame);
+btnRollCat.addEventListener('click', rollCategory);
+btnNextRound.addEventListener('click', nextRound);
+btnRestart.addEventListener('click', startGame);

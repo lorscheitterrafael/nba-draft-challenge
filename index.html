@@ -1,317 +1,195 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>NBA Draft Challenge</title>
-  <link rel="stylesheet" href="style.css" />
-</head>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NBA 7A0</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
 
-<body>
+  <body>
 
-  <!-- ======================================================
-    HEADER
-    Título do jogo. Sempre visível, independente da tela.
-  ======================================================= -->
-  <header id="main-header">
-    <div class="header-inner">
-      <h1 class="logo">NBA <span class="logo-accent">Draft</span> Challenge</h1>
-      <p class="logo-sub">Monte o melhor quinteto da história</p>
-    </div>
-  </header>
+    <!-- ========== CABEÇALHO ========== -->
+    <header id="main-header">
+      <div class="header-inner">
+        <h1 class="logo">NBA <span class="logo-highlight">7A0</span></h1>
+        <p class="logo-subtitle">O jogo das lendas da NBA</p>
+      </div>
+    </header>
 
-  <main id="main-content">
+    <!-- ========== CONTEÚDO PRINCIPAL ========== -->
+    <main id="main-content">
 
+      <!-- TELA 1: Início -->
+      <section id="screen-start" class="screen active">
+        <div class="start-box">
+          <h2 class="start-title">Pronto para jogar?</h2>
+          <p class="start-description">
+            Um time será sorteado. Você e a IA escolhem um jogador.
+            Compara seus atributos rodada a rodada. Quem vencer mais rodadas leva o jogo!
+          </p>
+          <button id="btn-start" class="btn btn-primary">Iniciar Partida</button>
+        </div>
+      </section>
 
+      <!-- TELA 2: Escolha do jogador -->
+      <section id="screen-pick" class="screen">
+        <div class="pick-header">
+          <h2 class="pick-title">Escolha seu jogador</h2>
+          <p id="pick-team-name" class="pick-team">Time: —</p>
+        </div>
 
-    <!-- ======================================================
-      TELA DE INÍCIO
-    ======================================================= -->
-    <section id="screen-start" class="screen active">
-      <div class="start-card">
-        <div class="start-icon">🏀</div>
-        <h2 class="start-title">Pronto para o Draft?</h2>
-        <p class="start-desc">
-          A cada rodada um time histórico da NBA é sorteado.<br />
-          Escolha um jogador para compor seu quinteto.<br />
-          Vença os playoffs e conquiste o título!
-        </p>
-        <button id="btn-start" class="btn btn-primary">Iniciar Draft</button>
+        <!-- Grade de cartas para o usuário escolher -->
+        <div id="player-grid" class="player-grid">
+          <!-- As cartas dos jogadores serão inseridas aqui pelo JavaScript -->
+        </div>
+      </section>
 
-        <!-- Painel de estatísticas do jogador -->
-        <div id="stats-panel" class="stats-panel hidden">
-          <div class="stats-panel-title">Seu Histórico</div>
+      <!-- TELA 3: Batalha (comparação) -->
+      <section id="screen-battle" class="screen">
 
-          <div class="stats-grid">
-            <div class="stat-box">
-              <span class="stat-box-value" id="stat-games">0</span>
-              <span class="stat-box-label">Partidas</span>
+        <!-- Placar no topo -->
+        <div id="scoreboard" class="scoreboard">
+          <div class="score-block">
+            <span class="score-label">Você</span>
+            <span id="score-player" class="score-value">0</span>
+          </div>
+          <div class="score-separator">×</div>
+          <div class="score-block">
+            <span class="score-label">IA</span>
+            <span id="score-ai" class="score-value">0</span>
+          </div>
+        </div>
+
+        <!-- Arena de batalha: carta do jogador vs carta da IA -->
+        <div class="battle-arena">
+
+          <!-- Carta do Jogador (usuário) -->
+          <div id="card-player" class="player-card">
+            <div class="card-team-badge" id="card-player-team">—</div>
+            <img id="card-player-img" class="card-photo" src="" alt="Foto do jogador" />
+            <div class="card-info">
+              <h3 id="card-player-name" class="card-name">—</h3>
+              <p id="card-player-position" class="card-position">—</p>
             </div>
-            <div class="stat-box">
-              <span class="stat-box-value gold" id="stat-titles">0</span>
-              <span class="stat-box-label">Títulos</span>
+            <ul class="card-stats">
+              <li class="stat-row" data-stat="overall">
+                <span class="stat-label">Overall</span>
+                <span id="player-stat-overall" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="speed">
+                <span class="stat-label">Velocidade</span>
+                <span id="player-stat-speed" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="shooting">
+                <span class="stat-label">Arremesso</span>
+                <span id="player-stat-shooting" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="defense">
+                <span class="stat-label">Defesa</span>
+                <span id="player-stat-defense" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="passing">
+                <span class="stat-label">Passe</span>
+                <span id="player-stat-passing" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="rebounding">
+                <span class="stat-label">Rebote</span>
+                <span id="player-stat-rebounding" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="dunking">
+                <span class="stat-label">Enterrada</span>
+                <span id="player-stat-dunking" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="iq">
+                <span class="stat-label">IQ</span>
+                <span id="player-stat-iq" class="stat-value">—</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- VS central -->
+          <div class="vs-badge">VS</div>
+
+          <!-- Carta da IA -->
+          <div id="card-ai" class="player-card card-ai">
+            <div class="card-team-badge" id="card-ai-team">—</div>
+            <img id="card-ai-img" class="card-photo" src="" alt="Foto do jogador IA" />
+            <div class="card-info">
+              <h3 id="card-ai-name" class="card-name">—</h3>
+              <p id="card-ai-position" class="card-position">—</p>
             </div>
-            <div class="stat-box">
-              <span class="stat-box-value" id="stat-finals">0</span>
-              <span class="stat-box-label">Finals</span>
-            </div>
-            <div class="stat-box">
-              <span class="stat-box-value" id="stat-best-avg">—</span>
-              <span class="stat-box-label">Melhor OVR</span>
-            </div>
+            <ul class="card-stats">
+              <li class="stat-row" data-stat="overall">
+                <span class="stat-label">Overall</span>
+                <span id="ai-stat-overall" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="speed">
+                <span class="stat-label">Velocidade</span>
+                <span id="ai-stat-speed" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="shooting">
+                <span class="stat-label">Arremesso</span>
+                <span id="ai-stat-shooting" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="defense">
+                <span class="stat-label">Defesa</span>
+                <span id="ai-stat-defense" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="passing">
+                <span class="stat-label">Passe</span>
+                <span id="ai-stat-passing" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="rebounding">
+                <span class="stat-label">Rebote</span>
+                <span id="ai-stat-rebounding" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="dunking">
+                <span class="stat-label">Enterrada</span>
+                <span id="ai-stat-dunking" class="stat-value">—</span>
+              </li>
+              <li class="stat-row" data-stat="iq">
+                <span class="stat-label">IQ</span>
+                <span id="ai-stat-iq" class="stat-value">—</span>
+              </li>
+            </ul>
           </div>
 
-          <!-- Últimas 5 partidas -->
-          <div class="stats-history-title">Últimas partidas</div>
-          <ul id="stats-history" class="stats-history"></ul>
+        </div><!-- /battle-arena -->
 
-          <button id="btn-clear-stats" class="btn-text-danger">Limpar histórico</button>
-        </div>
-      </div>
-    </section>
-
-
-    <!-- ======================================================
-      TELA DE DRAFT
-      Aparece a cada rodada com o time sorteado e os jogadores.
-    ======================================================= -->
-    <section id="screen-draft" class="screen">
-      <div class="game-layout">
-
-        <!-- Esquerda: informações da rodada + status das posições -->
-        <aside class="game-sidebar">
-          <span id="draft-round-label" class="draft-round-label">Rodada 1</span>
-          <h2 id="draft-team-name" class="draft-team-name">—</h2>
-          <p id="draft-team-season" class="draft-team-season">—</p>
-
-          <div id="draft-message" class="draft-message hidden">
-            <p id="draft-message-text"></p>
+        <!-- Área de ação: sorteio de categoria e resultado da rodada -->
+        <div class="battle-action">
+          <div id="round-category" class="round-category">
+            <span id="category-label">Categoria: —</span>
           </div>
-
-          <ul id="positions-status" class="positions-status">
-            <li class="pos-item" data-pos="PG"><span class="pos-check">○</span> <span class="pos-name">PG — Armador</span></li>
-            <li class="pos-item" data-pos="SG"><span class="pos-check">○</span> <span class="pos-name">SG — Ala-Armador</span></li>
-            <li class="pos-item" data-pos="SF"><span class="pos-check">○</span> <span class="pos-name">SF — Ala</span></li>
-            <li class="pos-item" data-pos="PF"><span class="pos-check">○</span> <span class="pos-name">PF — Ala-Pivô</span></li>
-            <li class="pos-item" data-pos="C"><span class="pos-check">○</span> <span class="pos-name">C — Pivô</span></li>
-          </ul>
-        </aside>
-
-        <!-- Centro: quadra de basquete SVG -->
-        <div class="court-container">
-          <svg id="court-svg" viewBox="0 0 260 380" xmlns="http://www.w3.org/2000/svg">
-            <!-- Fundo da quadra -->
-            <rect x="0" y="0" width="260" height="380" rx="8" fill="#b5651d" />
-
-            <!-- Pintura (garrafão) -->
-            <rect x="80" y="20" width="100" height="130" rx="4" fill="none" stroke="#f5c518" stroke-width="2" opacity="0.6"/>
-
-            <!-- Linha de lance livre -->
-            <line x1="80" y1="150" x2="180" y2="150" stroke="#f5c518" stroke-width="2" opacity="0.6"/>
-
-            <!-- Semicírculo da linha de 3 -->
-            <path d="M 20,290 Q 130,60 240,290" fill="none" stroke="#f5c518" stroke-width="2" opacity="0.6"/>
-
-            <!-- Linha de fundo -->
-            <line x1="10" y1="370" x2="250" y2="370" stroke="#f5c518" stroke-width="2" opacity="0.5"/>
-            <line x1="10" y1="10" x2="250" y2="10" stroke="#f5c518" stroke-width="2" opacity="0.5"/>
-
-            <!-- Aro e tabela -->
-            <rect x="115" y="8" width="30" height="6" rx="2" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
-            <circle cx="130" cy="28" r="10" fill="none" stroke="#ffffff" stroke-width="2" opacity="0.7"/>
-
-            <!-- Círculo do meio -->
-            <circle cx="130" cy="260" r="28" fill="none" stroke="#f5c518" stroke-width="2" opacity="0.4"/>
-
-            <!-- Slot C — Pivô (próximo da cesta) -->
-            <g id="slot-C" class="court-slot" data-position="C">
-              <circle cx="130" cy="90" r="28" fill="rgba(0,0,0,0.45)" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3"/>
-              <text x="130" y="84" text-anchor="middle" class="slot-pos-label">C</text>
-              <text x="130" y="100" text-anchor="middle" class="slot-player-name">—</text>
-            </g>
-
-            <!-- Slot PF — Ala-Pivô (esquerda) -->
-            <g id="slot-PF" class="court-slot" data-position="PF">
-              <circle cx="62" cy="185" r="28" fill="rgba(0,0,0,0.45)" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3"/>
-              <text x="62" y="179" text-anchor="middle" class="slot-pos-label">PF</text>
-              <text x="62" y="195" text-anchor="middle" class="slot-player-name">—</text>
-            </g>
-
-            <!-- Slot SF — Ala (direita) -->
-            <g id="slot-SF" class="court-slot" data-position="SF">
-              <circle cx="198" cy="185" r="28" fill="rgba(0,0,0,0.45)" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3"/>
-              <text x="198" y="179" text-anchor="middle" class="slot-pos-label">SF</text>
-              <text x="198" y="195" text-anchor="middle" class="slot-player-name">—</text>
-            </g>
-
-            <!-- Slot SG — Ala-Armador (esquerda, perímetro) -->
-            <g id="slot-SG" class="court-slot" data-position="SG">
-              <circle cx="45" cy="300" r="28" fill="rgba(0,0,0,0.45)" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3"/>
-              <text x="45" y="294" text-anchor="middle" class="slot-pos-label">SG</text>
-              <text x="45" y="310" text-anchor="middle" class="slot-player-name">—</text>
-            </g>
-
-            <!-- Slot PG — Armador (direita, perímetro) -->
-            <g id="slot-PG" class="court-slot" data-position="PG">
-              <circle cx="215" cy="300" r="28" fill="rgba(0,0,0,0.45)" stroke="#888" stroke-width="1.5" stroke-dasharray="5,3"/>
-              <text x="215" y="294" text-anchor="middle" class="slot-pos-label">PG</text>
-              <text x="215" y="310" text-anchor="middle" class="slot-player-name">—</text>
-            </g>
-          </svg>
-        </div>
-
-        <!-- Direita: lista de jogadores -->
-        <div class="player-list-panel">
-          <div class="player-list-header">Escolha um Jogador</div>
-          <ul id="player-list" class="player-list">
-            <!-- Preenchido pelo JavaScript -->
-          </ul>
-        </div>
-
-      </div>
-    </section>
-
-
-    <!-- ======================================================
-      TELA DE DRAFT COMPLETO
-      Mostra o quinteto montado e abre caminho para os playoffs.
-    ======================================================= -->
-    <section id="screen-draft-done" class="screen">
-      <div class="gameover-card">
-        <h2 class="gameover-title">✅ Quinteto Montado!</h2>
-        <p class="gameover-sub">Seu time está pronto para os playoffs</p>
-        <ul id="draftdone-lineup" class="gameover-lineup"></ul>
-        <div class="gameover-overall-box">
-          <span class="gameover-overall-label">Overall Médio</span>
-          <span id="draftdone-overall" class="gameover-overall-value">—</span>
-        </div>
-        <button id="btn-go-playoffs" class="btn btn-primary">🏀 Ir para os Playoffs →</button>
-      </div>
-    </section>
-
-    <!-- ======================================================
-      TELA DO BRACKET (chave dos playoffs)
-    ======================================================= -->
-    <section id="screen-bracket" class="screen">
-
-      <div class="bracket-header">
-        <h2 class="bracket-title">🏆 NBA Playoffs</h2>
-        <p class="bracket-sub">Vença 4 séries para ser campeão</p>
-      </div>
-
-      <!-- Chave visual: Conf A | Finals | Conf B -->
-      <div id="bracket-board" class="bracket-board"></div>
-
-      <div class="bracket-cta">
-        <button id="btn-start-series" class="btn btn-primary">Jogar Próxima Série</button>
-      </div>
-
-    </section>
-
-    <!-- ======================================================
-      TELA DA SÉRIE (jogo a jogo)
-    ======================================================= -->
-    <section id="screen-series" class="screen">
-
-      <!-- Badge de rodada + placar da série -->
-      <div class="series-header">
-        <span id="series-round-badge" class="series-round-badge">Quartas de Final</span>
-
-        <div class="series-scorebar">
-          <div class="series-side">
-            <span class="series-side-label">Seu Time</span>
-            <span id="series-u-wins" class="series-wins-num">0</span>
-          </div>
-          <span class="series-dash">–</span>
-          <div class="series-side">
-            <span id="series-opp-name" class="series-side-label">Oponente</span>
-            <span id="series-ai-wins" class="series-wins-num">0</span>
+          <button id="btn-roll-category" class="btn btn-primary">Sortear Categoria</button>
+          <div id="round-result" class="round-result hidden">
+            <p id="result-message" class="result-message">—</p>
+            <button id="btn-next-round" class="btn btn-secondary">Próxima Rodada</button>
           </div>
         </div>
 
-        <p class="series-info">Melhor de 7 · primeiro a 4 vitórias avança</p>
-      </div>
+      </section><!-- /screen-battle -->
 
-      <!-- Placar ao vivo (visível durante a simulação) -->
-      <div id="live-score-panel" class="live-score-panel hidden">
-        <div id="live-quarter-label" class="live-quarter-label">1º QUARTO</div>
-        <div class="live-score-board">
-          <div class="live-score-side">
-            <span class="live-score-team">Seu Time</span>
-            <span id="live-score-user" class="live-score-num">0</span>
-          </div>
-          <span class="live-score-x">×</span>
-          <div class="live-score-side">
-            <span id="live-score-opp-name" class="live-score-team">Oponente</span>
-            <span id="live-score-ai" class="live-score-num">0</span>
-          </div>
+      <!-- TELA 4: Fim de jogo -->
+      <section id="screen-gameover" class="screen">
+        <div class="gameover-box">
+          <h2 id="gameover-title" class="gameover-title">—</h2>
+          <p id="gameover-score" class="gameover-score">—</p>
+          <button id="btn-restart" class="btn btn-primary">Jogar Novamente</button>
         </div>
-        <div id="live-quarter-dots" class="live-quarter-dots">
-          <span class="qdot" data-q="1"></span>
-          <span class="qdot" data-q="2"></span>
-          <span class="qdot" data-q="3"></span>
-          <span class="qdot" data-q="4"></span>
-        </div>
-      </div>
+      </section>
 
-      <!-- Times lado a lado -->
-      <div class="series-teams-row">
+    </main><!-- /main-content -->
 
-        <div class="series-team-card user-card">
-          <h3 class="stc-title">Seu Quinteto</h3>
-          <ul id="series-user-list" class="stc-list"></ul>
-          <p class="stc-avg">Média: <strong id="series-user-avg">—</strong></p>
-        </div>
+    <!-- ========== RODAPÉ ========== -->
+    <footer id="main-footer">
+      <p class="footer-text">NBA 7A0 &copy; 2026 — Feito com HTML, CSS e JavaScript puro</p>
+    </footer>
 
-        <div class="series-vs-badge">VS</div>
+    <script src="data.js"></script>
+    <script src="script.js"></script>
 
-        <div class="series-team-card opp-card">
-          <h3 id="series-opp-title" class="stc-title">Oponente</h3>
-          <ul id="series-opp-list" class="stc-list"></ul>
-          <p class="stc-avg">Média: <strong id="series-opp-avg">—</strong></p>
-        </div>
-
-      </div>
-
-      <!-- Log de jogos -->
-      <ul id="series-log" class="series-log"></ul>
-
-      <!-- Ações -->
-      <div class="series-actions">
-        <button id="btn-sim-game"    class="btn btn-primary">▶ Simular Próximo Jogo</button>
-        <button id="btn-series-next" class="btn btn-secondary hidden">Continuar →</button>
-      </div>
-
-    </section>
-
-    <!-- ======================================================
-      TELA FINAL (campeão ou eliminado)
-    ======================================================= -->
-    <section id="screen-gameover" class="screen">
-      <div id="gameover-card" class="gameover-card">
-        <div id="gameover-icon"  class="gameover-icon">🏆</div>
-        <h2 id="gameover-title" class="gameover-title">—</h2>
-        <p  id="gameover-sub"   class="gameover-sub">—</p>
-        <ul id="gameover-lineup" class="gameover-lineup"></ul>
-        <div class="gameover-overall-box">
-          <span class="gameover-overall-label">Overall Médio do Quinteto</span>
-          <span id="gameover-overall" class="gameover-overall-value">—</span>
-        </div>
-        <button id="btn-restart" class="btn btn-primary">Jogar Novamente</button>
-      </div>
-    </section>
-
-
-  </main><!-- /main-content -->
-
-  <footer id="main-footer">
-    <p class="footer-text">NBA Draft Challenge &copy; 2026 — Todos Direitos Reservados</p>
-  </footer>
-
-  <!-- data.js carrega antes para que script.js possa usar os dados -->
-  <script src="data.js"></script>
-  <script src="script.js"></script>
-
-</body>
+  </body>
 </html>
