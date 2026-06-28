@@ -1,432 +1,268 @@
 // =============================================================
-//  NBA 7A0 — BASE DE DADOS DE JOGADORES
-//  Estrutura: array de times, cada time contém array de jogadores.
-//  Atributos vão de 0 a 99, como no NBA 2K.
+//  NBA DRAFT CHALLENGE — BASE DE DADOS
+//
+//  Overalls rebalanceados: range 62–97
+//  Lendas absolutas chegam a 95–97. A maioria dos jogadores
+//  fica entre 68–88, tornando as séries bem mais competitivas.
+//
+//  Cores do overall:
+//  95+ → dourado (elite)   90–94 → azul    80–89 → branco   <80 → cinza
 // =============================================================
 
 const NBA_TEAMS = [
 
   // -----------------------------------------------------------
-  //  LOS ANGELES LAKERS — Dynasty 2001-02 (Shaq + Kobe)
+  //  GOLDEN STATE WARRIORS 2015-16 · 73 vitórias
   // -----------------------------------------------------------
   {
-    id: "lakers-0102",
-    name: "Los Angeles Lakers",
-    season: "2001-02",
-    players: [
-      {
-        id: "shaq-0102",
-        name: "Shaquille O'Neal",
-        team: "Los Angeles Lakers",
-        season: "2001-02",
-        position: "C",
-        image: "assets/shaq.png",
-        stats: {
-          overall:    99,
-          speed:      58,
-          shooting:   72,
-          defense:    85,
-          passing:    60,
-          rebounding: 98,
-          dunking:    99,
-          iq:         88
-        }
-      },
-      {
-        id: "kobe-0102",
-        name: "Kobe Bryant",
-        team: "Los Angeles Lakers",
-        season: "2001-02",
-        position: "SG",
-        image: "assets/kobe.png",
-        stats: {
-          overall:    97,
-          speed:      92,
-          shooting:   96,
-          defense:    88,
-          passing:    78,
-          rebounding: 62,
-          dunking:    88,
-          iq:         98
-        }
-      },
-      {
-        id: "payton-0102",
-        name: "Gary Payton",
-        team: "Los Angeles Lakers",
-        season: "2001-02",
-        position: "PG",
-        image: "assets/payton.png",
-        stats: {
-          overall:    87,
-          speed:      82,
-          shooting:   76,
-          defense:    94,
-          passing:    90,
-          rebounding: 52,
-          dunking:    55,
-          iq:         92
-        }
-      },
-      {
-        id: "malone-0102",
-        name: "Karl Malone",
-        team: "Los Angeles Lakers",
-        season: "2001-02",
-        position: "PF",
-        image: "assets/malone.png",
-        stats: {
-          overall:    90,
-          speed:      72,
-          shooting:   82,
-          defense:    80,
-          passing:    65,
-          rebounding: 88,
-          dunking:    78,
-          iq:         86
-        }
-      },
-      {
-        id: "fisher-0102",
-        name: "Derek Fisher",
-        team: "Los Angeles Lakers",
-        season: "2001-02",
-        position: "PG",
-        image: "assets/fisher.png",
-        stats: {
-          overall:    76,
-          speed:      74,
-          shooting:   78,
-          defense:    72,
-          passing:    80,
-          rebounding: 42,
-          dunking:    40,
-          iq:         85
-        }
-      }
-    ]
-  },
-
-  // -----------------------------------------------------------
-  //  CHICAGO BULLS — Dynasty 1995-96 (Jordan 72 wins)
-  // -----------------------------------------------------------
-  {
-    id: "bulls-9596",
-    name: "Chicago Bulls",
-    season: "1995-96",
-    players: [
-      {
-        id: "jordan-9596",
-        name: "Michael Jordan",
-        team: "Chicago Bulls",
-        season: "1995-96",
-        position: "SG",
-        image: "assets/jordan.png",
-        stats: {
-          overall:    99,
-          speed:      94,
-          shooting:   98,
-          defense:    96,
-          passing:    82,
-          rebounding: 68,
-          dunking:    97,
-          iq:         99
-        }
-      },
-      {
-        id: "pippen-9596",
-        name: "Scottie Pippen",
-        team: "Chicago Bulls",
-        season: "1995-96",
-        position: "SF",
-        image: "assets/pippen.png",
-        stats: {
-          overall:    93,
-          speed:      88,
-          shooting:   80,
-          defense:    95,
-          passing:    88,
-          rebounding: 72,
-          dunking:    82,
-          iq:         94
-        }
-      },
-      {
-        id: "rodman-9596",
-        name: "Dennis Rodman",
-        team: "Chicago Bulls",
-        season: "1995-96",
-        position: "PF",
-        image: "assets/rodman.png",
-        stats: {
-          overall:    86,
-          speed:      78,
-          shooting:   42,
-          defense:    90,
-          passing:    55,
-          rebounding: 99,
-          dunking:    60,
-          iq:         80
-        }
-      },
-      {
-        id: "kukoc-9596",
-        name: "Toni Kukoč",
-        team: "Chicago Bulls",
-        season: "1995-96",
-        position: "SF",
-        image: "assets/kukoc.png",
-        stats: {
-          overall:    82,
-          speed:      76,
-          shooting:   84,
-          defense:    68,
-          passing:    85,
-          rebounding: 60,
-          dunking:    65,
-          iq:         88
-        }
-      },
-      {
-        id: "longley-9596",
-        name: "Luc Longley",
-        team: "Chicago Bulls",
-        season: "1995-96",
-        position: "C",
-        image: "assets/longley.png",
-        stats: {
-          overall:    74,
-          speed:      52,
-          shooting:   65,
-          defense:    74,
-          passing:    58,
-          rebounding: 78,
-          dunking:    70,
-          iq:         72
-        }
-      }
-    ]
-  },
-
-  // -----------------------------------------------------------
-  //  GOLDEN STATE WARRIORS — Dynasty 2015-16 (73 wins)
-  // -----------------------------------------------------------
-  {
-    id: "warriors-1516",
+    id: "gsw-2016",
     name: "Golden State Warriors",
     season: "2015-16",
     players: [
-      {
-        id: "curry-1516",
-        name: "Stephen Curry",
-        team: "Golden State Warriors",
-        season: "2015-16",
-        position: "PG",
-        image: "assets/curry.png",
-        stats: {
-          overall:    99,
-          speed:      88,
-          shooting:   99,
-          defense:    72,
-          passing:    88,
-          rebounding: 52,
-          dunking:    48,
-          iq:         97
-        }
-      },
-      {
-        id: "thompson-1516",
-        name: "Klay Thompson",
-        team: "Golden State Warriors",
-        season: "2015-16",
-        position: "SG",
-        image: "assets/klay.png",
-        stats: {
-          overall:    92,
-          speed:      82,
-          shooting:   95,
-          defense:    84,
-          passing:    68,
-          rebounding: 58,
-          dunking:    70,
-          iq:         86
-        }
-      },
-      {
-        id: "durant-1516",
-        name: "Kevin Durant",
-        team: "Golden State Warriors",
-        season: "2015-16",
-        position: "SF",
-        image: "assets/durant.png",
-        stats: {
-          overall:    97,
-          speed:      86,
-          shooting:   96,
-          defense:    78,
-          passing:    76,
-          rebounding: 78,
-          dunking:    90,
-          iq:         92
-        }
-      },
-      {
-        id: "green-1516",
-        name: "Draymond Green",
-        team: "Golden State Warriors",
-        season: "2015-16",
-        position: "PF",
-        image: "assets/draymond.png",
-        stats: {
-          overall:    88,
-          speed:      80,
-          shooting:   68,
-          defense:    96,
-          passing:    90,
-          rebounding: 82,
-          dunking:    65,
-          iq:         98
-        }
-      },
-      {
-        id: "iguodala-1516",
-        name: "Andre Iguodala",
-        team: "Golden State Warriors",
-        season: "2015-16",
-        position: "SF",
-        image: "assets/iguodala.png",
-        stats: {
-          overall:    82,
-          speed:      84,
-          shooting:   72,
-          defense:    90,
-          passing:    80,
-          rebounding: 60,
-          dunking:    72,
-          iq:         88
-        }
-      }
+      { id: "curry-gsw",      name: "Stephen Curry",      number: 30, position: "PG", overall: 96 },
+      { id: "klay-gsw",       name: "Klay Thompson",      number: 11, position: "SG", overall: 87 },
+      { id: "durant-gsw",     name: "Kevin Durant",        number: 35, position: "SF", overall: 92 },
+      { id: "draymond-gsw",   name: "Draymond Green",      number: 23, position: "PF", overall: 83 },
+      { id: "bogut-gsw",      name: "Andrew Bogut",        number: 12, position: "C",  overall: 72 },
+      { id: "iguodala-gsw",   name: "Andre Iguodala",      number: 9,  position: "SF", overall: 77 },
+      { id: "livingston-gsw", name: "Shaun Livingston",    number: 34, position: "PG", overall: 68 },
+      { id: "barnes-gsw",     name: "Harrison Barnes",     number: 40, position: "SF", overall: 71 }
     ]
   },
 
   // -----------------------------------------------------------
-  //  MIAMI HEAT — 2012-13 (LeBron, Wade, Bosh)
+  //  CHICAGO BULLS 1995-96 · 72 vitórias
   // -----------------------------------------------------------
   {
-    id: "heat-1213",
+    id: "chi-1996",
+    name: "Chicago Bulls",
+    season: "1995-96",
+    players: [
+      { id: "jordan-chi",  name: "Michael Jordan",   number: 23, position: "SG", overall: 97 },
+      { id: "pippen-chi",  name: "Scottie Pippen",   number: 33, position: "SF", overall: 89 },
+      { id: "rodman-chi",  name: "Dennis Rodman",    number: 91, position: "PF", overall: 81 },
+      { id: "kukoc-chi",   name: "Toni Kukoč",       number: 7,  position: "SF", overall: 77 },
+      { id: "longley-chi", name: "Luc Longley",      number: 13, position: "C",  overall: 67 },
+      { id: "harper-chi",  name: "Ron Harper",       number: 9,  position: "PG", overall: 71 },
+      { id: "kerr-chi",    name: "Steve Kerr",       number: 25, position: "PG", overall: 64 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  LOS ANGELES LAKERS 2001-02 · Tricampeonato
+  // -----------------------------------------------------------
+  {
+    id: "lal-2002",
+    name: "Los Angeles Lakers",
+    season: "2001-02",
+    players: [
+      { id: "shaq-lal",   name: "Shaquille O'Neal",  number: 34, position: "C",  overall: 95 },
+      { id: "kobe-lal",   name: "Kobe Bryant",        number: 8,  position: "SG", overall: 93 },
+      { id: "payton-lal", name: "Gary Payton",        number: 20, position: "PG", overall: 83 },
+      { id: "malone-lal", name: "Karl Malone",        number: 11, position: "PF", overall: 85 },
+      { id: "fisher-lal", name: "Derek Fisher",       number: 2,  position: "PG", overall: 69 },
+      { id: "fox-lal",    name: "Rick Fox",           number: 17, position: "SF", overall: 70 },
+      { id: "horry-lal",  name: "Robert Horry",       number: 5,  position: "PF", overall: 72 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  SAN ANTONIO SPURS 2013-14 · Basquete mais bonito da história
+  // -----------------------------------------------------------
+  {
+    id: "sas-2014",
+    name: "San Antonio Spurs",
+    season: "2013-14",
+    players: [
+      { id: "duncan-sas",   name: "Tim Duncan",             number: 21, position: "C",  overall: 91 },
+      { id: "parker-sas",   name: "Tony Parker",            number: 9,  position: "PG", overall: 86 },
+      { id: "ginobili-sas", name: "Manu Ginobili",          number: 20, position: "SG", overall: 83 },
+      { id: "leonard-sas",  name: "Kawhi Leonard",          number: 2,  position: "SF", overall: 85 },
+      { id: "diaw-sas",     name: "Boris Diaw",             number: 33, position: "PF", overall: 74 },
+      { id: "green-sas",    name: "Danny Green",            number: 14, position: "SG", overall: 71 },
+      { id: "splitter-sas", name: "Tiago Splitter",         number: 22, position: "PF", overall: 72 },
+      { id: "mills-sas",    name: "Patty Mills",            number: 8,  position: "PG", overall: 67 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  MIAMI HEAT 2012-13 · LeBron MVP · Bicampeonato
+  // -----------------------------------------------------------
+  {
+    id: "mia-2013",
     name: "Miami Heat",
     season: "2012-13",
     players: [
-      {
-        id: "lebron-1213",
-        name: "LeBron James",
-        team: "Miami Heat",
-        season: "2012-13",
-        position: "SF",
-        image: "assets/lebron.png",
-        stats: {
-          overall:    99,
-          speed:      90,
-          shooting:   88,
-          defense:    88,
-          passing:    96,
-          rebounding: 82,
-          dunking:    96,
-          iq:         99
-        }
-      },
-      {
-        id: "wade-1213",
-        name: "Dwyane Wade",
-        team: "Miami Heat",
-        season: "2012-13",
-        position: "SG",
-        image: "assets/wade.png",
-        stats: {
-          overall:    93,
-          speed:      90,
-          shooting:   86,
-          defense:    86,
-          passing:    78,
-          rebounding: 58,
-          dunking:    92,
-          iq:         90
-        }
-      },
-      {
-        id: "bosh-1213",
-        name: "Chris Bosh",
-        team: "Miami Heat",
-        season: "2012-13",
-        position: "C",
-        image: "assets/bosh.png",
-        stats: {
-          overall:    88,
-          speed:      76,
-          shooting:   86,
-          defense:    76,
-          passing:    68,
-          rebounding: 84,
-          dunking:    78,
-          iq:         85
-        }
-      },
-      {
-        id: "chalmers-1213",
-        name: "Mario Chalmers",
-        team: "Miami Heat",
-        season: "2012-13",
-        position: "PG",
-        image: "assets/chalmers.png",
-        stats: {
-          overall:    74,
-          speed:      82,
-          shooting:   74,
-          defense:    78,
-          passing:    78,
-          rebounding: 42,
-          dunking:    45,
-          iq:         76
-        }
-      },
-      {
-        id: "allen-1213",
-        name: "Ray Allen",
-        team: "Miami Heat",
-        season: "2012-13",
-        position: "SG",
-        image: "assets/allen.png",
-        stats: {
-          overall:    84,
-          speed:      78,
-          shooting:   97,
-          defense:    74,
-          passing:    72,
-          rebounding: 48,
-          dunking:    52,
-          iq:         92
-        }
-      }
+      { id: "lebron-mia",   name: "LeBron James",    number: 6,  position: "SF", overall: 97 },
+      { id: "wade-mia",     name: "Dwyane Wade",     number: 3,  position: "SG", overall: 89 },
+      { id: "bosh-mia",     name: "Chris Bosh",      number: 1,  position: "C",  overall: 84 },
+      { id: "allen-mia",    name: "Ray Allen",       number: 34, position: "SG", overall: 79 },
+      { id: "chalmers-mia", name: "Mario Chalmers",  number: 15, position: "PG", overall: 68 },
+      { id: "battier-mia",  name: "Shane Battier",   number: 31, position: "SF", overall: 67 },
+      { id: "haslem-mia",   name: "Udonis Haslem",   number: 40, position: "PF", overall: 66 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  BOSTON CELTICS 2007-08 · Big Three · Campeões
+  // -----------------------------------------------------------
+  {
+    id: "bos-2008",
+    name: "Boston Celtics",
+    season: "2007-08",
+    players: [
+      { id: "garnett-bos", name: "Kevin Garnett",    number: 5,  position: "PF", overall: 93 },
+      { id: "pierce-bos",  name: "Paul Pierce",      number: 34, position: "SF", overall: 86 },
+      { id: "allen-bos",   name: "Ray Allen",        number: 20, position: "SG", overall: 84 },
+      { id: "rondo-bos",   name: "Rajon Rondo",      number: 9,  position: "PG", overall: 78 },
+      { id: "perkins-bos", name: "Kendrick Perkins", number: 43, position: "C",  overall: 69 },
+      { id: "posey-bos",   name: "James Posey",      number: 30, position: "SF", overall: 68 },
+      { id: "house-bos",   name: "Eddie House",      number: 11, position: "PG", overall: 63 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  MINNESOTA TIMBERWOLVES 2023-24 · Ant Edwards
+  // -----------------------------------------------------------
+  {
+    id: "min-2024",
+    name: "Minnesota Timberwolves",
+    season: "2023-24",
+    players: [
+      { id: "edwards-min",   name: "Anthony Edwards",   number: 5,  position: "SG", overall: 90 },
+      { id: "gobert-min",    name: "Rudy Gobert",       number: 27, position: "C",  overall: 84 },
+      { id: "randle-min",    name: "Julius Randle",     number: 30, position: "PF", overall: 81 },
+      { id: "conley-min",    name: "Mike Conley",       number: 10, position: "PG", overall: 74 },
+      { id: "mcdaniels-min", name: "Jaden McDaniels",   number: 3,  position: "SF", overall: 75 },
+      { id: "anderson-min",  name: "Kyle Anderson",     number: 1,  position: "PF", overall: 68 },
+      { id: "reid-min",      name: "Naz Reid",          number: 11, position: "C",  overall: 73 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  DENVER NUGGETS 2022-23 · Jokić MVP · Campeões
+  // -----------------------------------------------------------
+  {
+    id: "den-2023",
+    name: "Denver Nuggets",
+    season: "2022-23",
+    players: [
+      { id: "jokic-den",    name: "Nikola Jokić",               number: 15, position: "C",  overall: 97 },
+      { id: "murray-den",   name: "Jamal Murray",               number: 27, position: "PG", overall: 85 },
+      { id: "mpj-den",      name: "Michael Porter Jr.",         number: 1,  position: "SF", overall: 80 },
+      { id: "gordon-den",   name: "Aaron Gordon",               number: 50, position: "PF", overall: 78 },
+      { id: "kcp-den",      name: "Kentavious C-Pope",          number: 5,  position: "SG", overall: 74 },
+      { id: "braun-den",    name: "Christian Braun",            number: 0,  position: "SG", overall: 66 },
+      { id: "nnaji-den",    name: "Zeke Nnaji",                 number: 22, position: "C",  overall: 62 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  DETROIT PISTONS 2003-04 · Campeões sem estrela dominante
+  // -----------------------------------------------------------
+  {
+    id: "det-2004",
+    name: "Detroit Pistons",
+    season: "2003-04",
+    players: [
+      { id: "billups-det",  name: "Chauncey Billups",   number: 1,  position: "PG", overall: 83 },
+      { id: "rip-det",      name: "Richard Hamilton",   number: 32, position: "SG", overall: 80 },
+      { id: "prince-det",   name: "Tayshaun Prince",    number: 22, position: "SF", overall: 76 },
+      { id: "rasheed-det",  name: "Rasheed Wallace",    number: 36, position: "PF", overall: 82 },
+      { id: "bwallace-det", name: "Ben Wallace",        number: 3,  position: "C",  overall: 78 },
+      { id: "hunter-det",   name: "Lindsey Hunter",     number: 10, position: "PG", overall: 63 },
+      { id: "williams-det", name: "Corliss Williamson", number: 5,  position: "SF", overall: 62 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  DALLAS MAVERICKS 2010-11 · Dirk Nowitzki · Campeões
+  // -----------------------------------------------------------
+  {
+    id: "dal-2011",
+    name: "Dallas Mavericks",
+    season: "2010-11",
+    players: [
+      { id: "kidd-dal",    name: "Jason Kidd",          number: 5,  position: "PG", overall: 78 },
+      { id: "terry-dal",   name: "Jason Terry",         number: 31, position: "SG", overall: 76 },
+      { id: "marion-dal",  name: "Shawn Marion",        number: 0,  position: "SF", overall: 76 },
+      { id: "dirk-dal",    name: "Dirk Nowitzki",       number: 41, position: "PF", overall: 94 },
+      { id: "chandler-dal",name: "Tyson Chandler",      number: 6,  position: "C",  overall: 77 },
+      { id: "barea-dal",   name: "J.J. Barea",          number: 11, position: "PG", overall: 70 },
+      { id: "stevenson-dal",name:"DeShawn Stevenson",   number: 92, position: "SG", overall: 66 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  CLEVELAND CAVALIERS 2015-16 · LeBron · Remontada histórica
+  // -----------------------------------------------------------
+  {
+    id: "cle-2016",
+    name: "Cleveland Cavaliers",
+    season: "2015-16",
+    players: [
+      { id: "kyrie-cle",  name: "Kyrie Irving",         number: 2,  position: "PG", overall: 88 },
+      { id: "jr-cle",     name: "J.R. Smith",           number: 5,  position: "SG", overall: 73 },
+      { id: "lebron-cle", name: "LeBron James",         number: 23, position: "SF", overall: 97 },
+      { id: "love-cle",   name: "Kevin Love",           number: 0,  position: "PF", overall: 82 },
+      { id: "tt-cle",     name: "Tristan Thompson",     number: 13, position: "C",  overall: 73 },
+      { id: "delly-cle",  name: "Matthew Dellavedova",  number: 8,  position: "PG", overall: 63 },
+      { id: "shump-cle",  name: "Iman Shumpert",        number: 4,  position: "SG", overall: 69 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  OKC THUNDER 2011-12 · Durant + Westbrook + Harden
+  // -----------------------------------------------------------
+  {
+    id: "okc-2012",
+    name: "OKC Thunder",
+    season: "2011-12",
+    players: [
+      { id: "westbrook-okc", name: "Russell Westbrook", number: 0,  position: "PG", overall: 88 },
+      { id: "harden-okc",    name: "James Harden",      number: 13, position: "SG", overall: 85 },
+      { id: "durant-okc",    name: "Kevin Durant",      number: 35, position: "SF", overall: 95 },
+      { id: "ibaka-okc",     name: "Serge Ibaka",       number: 9,  position: "PF", overall: 79 },
+      { id: "perkins-okc",   name: "Kendrick Perkins",  number: 5,  position: "C",  overall: 65 },
+      { id: "sefolosha-okc", name: "Thabo Sefolosha",   number: 2,  position: "SG", overall: 68 },
+      { id: "collison-okc",  name: "Nick Collison",     number: 4,  position: "PF", overall: 65 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  TORONTO RAPTORS 2018-19 · Kawhi · Campeões
+  // -----------------------------------------------------------
+  {
+    id: "tor-2019",
+    name: "Toronto Raptors",
+    season: "2018-19",
+    players: [
+      { id: "lowry-tor",   name: "Kyle Lowry",          number: 7,  position: "PG", overall: 82 },
+      { id: "dgreen-tor",  name: "Danny Green",         number: 14, position: "SG", overall: 73 },
+      { id: "kawhi-tor",   name: "Kawhi Leonard",       number: 2,  position: "SF", overall: 94 },
+      { id: "siakam-tor",  name: "Pascal Siakam",       number: 43, position: "PF", overall: 81 },
+      { id: "gasol-tor",   name: "Marc Gasol",          number: 33, position: "C",  overall: 80 },
+      { id: "vvf-tor",     name: "Fred VanVleet",       number: 23, position: "PG", overall: 74 },
+      { id: "powell-tor",  name: "Norman Powell",       number: 24, position: "SG", overall: 71 }
+    ]
+  },
+
+  // -----------------------------------------------------------
+  //  PHOENIX SUNS 2004-05 · Nash MVP · 7 Segundos ou Menos
+  // -----------------------------------------------------------
+  {
+    id: "phx-2005",
+    name: "Phoenix Suns",
+    season: "2004-05",
+    players: [
+      { id: "nash-phx",    name: "Steve Nash",          number: 13, position: "PG", overall: 91 },
+      { id: "johnson-phx", name: "Joe Johnson",         number: 2,  position: "SG", overall: 79 },
+      { id: "qrich-phx",   name: "Quentin Richardson",  number: 15, position: "SF", overall: 71 },
+      { id: "marion-phx",  name: "Shawn Marion",        number: 31, position: "PF", overall: 84 },
+      { id: "amare-phx",   name: "Amar'e Stoudemire",   number: 1,  position: "C",  overall: 86 },
+      { id: "barbosa-phx", name: "Leandro Barbosa",     number: 10, position: "PG", overall: 71 },
+      { id: "diaw-phx",    name: "Boris Diaw",          number: 3,  position: "SF", overall: 70 }
     ]
   }
 
 ];
-
-// =============================================================
-//  MAPA DE CATEGORIAS
-//  Traduz as chaves internas (ex: "shooting") para o nome
-//  exibido na tela (ex: "Arremesso").
-// =============================================================
-const STAT_LABELS = {
-  overall:    "Overall",
-  speed:      "Velocidade",
-  shooting:   "Arremesso",
-  defense:    "Defesa",
-  passing:    "Passe",
-  rebounding: "Rebote",
-  dunking:    "Enterrada",
-  iq:         "IQ"
-};
-
-// Array com apenas as chaves, útil para sortear uma categoria aleatória
-const STAT_KEYS = Object.keys(STAT_LABELS);
